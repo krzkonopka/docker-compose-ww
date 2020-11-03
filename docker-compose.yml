@@ -1,0 +1,41 @@
+version: '3'
+services:
+
+# Services for the application - uses different volumes/code to prove that loadbalancing works
+# One may want to pass env variables with database hostname/credentials etc.
+
+  app1:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./app1:/usr/share/nginx/html/
+    depends_on:
+      - database
+
+  app2:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./app2:/usr/share/nginx/html/
+    depends_on:
+      - database
+
+
+
+# Database service - WARN: no persistence (should use locally exported volume, otherwise might result in data loss)
+  database:
+    image: percona:8
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: one_should_never_store_passwords_in_repository_but_hey_this_is_a_sample
+
+  loadbalancer:
+    image: nginx:latest
+    restart: always
+    volumes:
+      - ./nginx_conf.d:/etc/nginx/conf.d/
+    depends_on:
+      - app1
+      - app2
+    ports:
+      - 8080:80
